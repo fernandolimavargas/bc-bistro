@@ -1,57 +1,53 @@
 // Simple client-side data store using localStorage.
 // Replace these functions with real API calls when backend is ready.
 
-export type Categoria = "Almoços" | "Hambúrgueres" | "Bebidas" | "Doces";
+import { api } from "@/services/api";
+
+export type Categoria = "Almoços" | "Hambúrgueres" | "Bebidas" | "Outros";
 
 export interface Produto {
-  id: string;
-  nome: string;
+  id: number;
+  produto: string;
   preco: number;
-  categoria: Categoria;
+  idCategoria: number;
+  categoria: string;
 }
 
 export interface ItemVenda {
-  produtoId: string;
-  nome: string;
-  preco: number;
+  produtoId: number;
+  produto: string;
+  valorUnidade: number; 
+  valorCalculado: number;
+  valorTotal: number;
   quantidade: number;
 }
 
 export interface Venda {
-  id: string;
-  data: string; // ISO
-  itens: ItemVenda[];
+  id: number;
+  horaVenda: string; 
+  produtos: ItemVenda[];
   total: number;
 }
 
-const PRODUTOS_KEY = "bc_bistro_produtos";
-const VENDAS_KEY = "bc_bistro_vendas";
-
-const uid = () => Math.random().toString(36).slice(2, 10);
-
-const produtosIniciais: Produto[] = [
-  { id: uid(), nome: "Almoço — Voluntário", preco: 35, categoria: "Almoços" },
-  { id: uid(), nome: "Almoço", preco: 45, categoria: "Almoços" },
-  { id: uid(), nome: "Hambúrguer com batata", preco: 35, categoria: "Hambúrgueres" },
-  { id: uid(), nome: "Hambúrguer sem batata", preco: 30, categoria: "Hambúrgueres" },
-  { id: uid(), nome: "Hambúrguer com batata (Voluntário)", preco: 25, categoria: "Hambúrgueres" },
-  { id: uid(), nome: "Hambúrguer sem batata (Voluntário)", preco: 20, categoria: "Hambúrgueres" },
-  { id: uid(), nome: "Água", preco: 4, categoria: "Bebidas" },
-  { id: uid(), nome: "Coca-Cola normal", preco: 7, categoria: "Bebidas" },
-  { id: uid(), nome: "Coca-Cola zero", preco: 7, categoria: "Bebidas" },
-  { id: uid(), nome: "Guaraná", preco: 6, categoria: "Bebidas" },
-  { id: uid(), nome: "Guaraná zero", preco: 6, categoria: "Bebidas" },
-  { id: uid(), nome: "Energético", preco: 12, categoria: "Bebidas" },
-  { id: uid(), nome: "Brownie", preco: 8, categoria: "Doces" },
-  { id: uid(), nome: "Alfajor", preco: 7, categoria: "Doces" },
-  { id: uid(), nome: "Chiclete", preco: 2, categoria: "Doces" },
-];
-
-function isBrowser() {
-  return typeof window !== "undefined";
+export interface Catalogo { 
+    id: number;
+    produto: string;
+    preco: number;
+    idCategoria: number;
+    categoria: string;
+    disponivel: boolean;
 }
 
-export function getProdutos(): Produto[] {
+export interface VendasHistoricos {
+  id: number;
+  dataVenda: string;
+  valorVendidoGeral: number;
+  valorVendidoHoje: number;
+  vendasTotaisHoje: number;
+}
+
+
+/*export function getProdutos(): Produto[] {
   if (!isBrowser()) return produtosIniciais;
   const raw = localStorage.getItem(PRODUTOS_KEY);
   if (!raw) {
@@ -63,29 +59,38 @@ export function getProdutos(): Produto[] {
   } catch {
     return produtosIniciais;
   }
+} */
+
+export async function getProdutos(): Promise<Produto[]> { 
+  const response = await api.get("/produto/buscar_produtos")
+
+  return response.data;
 }
 
-export function saveProdutos(p: Produto[]) {
-  localStorage.setItem(PRODUTOS_KEY, JSON.stringify(p));
-}
 
-export function addProduto(p: Omit<Produto, "id">): Produto {
+/*export function addProduto(p: Omit<Produto, "id">): Produto {
   const novo = { ...p, id: uid() };
   const all = [...getProdutos(), novo];
   saveProdutos(all);
   return novo;
-}
+} */
 
-export function updateProduto(id: string, patch: Partial<Omit<Produto, "id">>) {
+export async function addProduto(produto: Omit<Produto, "id">) { 
+  const response = await api.post("/produto/adicionar_produto", produto); 
+  return response.data; 
+} 
+
+/*export function updateProduto(id: string, patch: Partial<Omit<Produto, "id">>) {
   const all = getProdutos().map((p) => (p.id === id ? { ...p, ...patch } : p));
   saveProdutos(all);
+}*/
+
+export async function updateProduto(produto: Produto) { 
+  const response = await api.post("/produto/alterar_produto", produto); 
+  return response.data; 
 }
 
-export function deleteProduto(id: string) {
-  saveProdutos(getProdutos().filter((p) => p.id !== id));
-}
-
-export function getVendas(): Venda[] {
+/*xport function getVendas(): Venda[] {
   if (!isBrowser()) return [];
   const raw = localStorage.getItem(VENDAS_KEY);
   if (!raw) return [];
@@ -94,14 +99,56 @@ export function getVendas(): Venda[] {
   } catch {
     return [];
   }
-}
+} */
 
-export function addVenda(itens: ItemVenda[]): Venda {
+/*export function addVenda(itens: ItemVenda[]): Venda {
   const total = itens.reduce((s, i) => s + i.preco * i.quantidade, 0);
   const venda: Venda = { id: uid(), data: new Date().toISOString(), itens, total };
   const all = [venda, ...getVendas()];
   localStorage.setItem(VENDAS_KEY, JSON.stringify(all));
   return venda;
+}*/
+
+export async function addVenda(
+  itens: ItemVenda[]
+) {
+
+  const total = itens.reduce(
+    (s, i) => s + i.valorCalculado,
+    0
+  );
+
+  const venda = {
+    horaVenda: new Date().toISOString(),
+    total,
+
+    produtos: itens.map((i) => ({
+      produto: i.produto,
+      quantidade: i.quantidade,
+      valorUnidade: i.valorUnidade,
+      valorCalculado: i.valorCalculado,
+      valorTotal: i.valorTotal,
+    })),
+  };
+
+  const response = await api.post(
+    "/venda/finalizar_venda",
+    venda
+  );
+
+  return response.data;
+}
+
+export async function mostrarCatalogo(filtro: number): Promise<Catalogo[]> { 
+  const response = await api.get(`/catalogo/mostrar_catalogo/${filtro}`); 
+
+  return response.data
+}
+
+export async function buscarVendas(): Promise<VendasHistoricos[]> {
+  const response = await api.get("/venda/buscar_vendas");
+
+  return response.data;
 }
 
 export const formatBRL = (v: number) =>

@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BistroHeader } from "@/components/BistroHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   addVenda,
   formatBRL,
-  getProdutos,
+  mostrarCatalogo,
   type Categoria,
   type ItemVenda,
   type Produto,
@@ -24,54 +24,111 @@ export const Route = createFileRoute("/")({
   component: Loja,
 });
 
-const CATEGORIAS: Categoria[] = ["Almoços", "Hambúrgueres", "Bebidas", "Doces"];
+const CATEGORIAS: Categoria[] = [
+  "Almoços",
+  "Hambúrgueres",
+  "Bebidas",
+  "Outros",
+];
 
 function Loja() {
-  const [produtos, setProdutos] = useState<Produto[]>(() => getProdutos());
-  const [carrinho, setCarrinho] = useState<Record<string, number>>({});
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [carrinho, setCarrinho] = useState<Record<number, number>>({});
   const [filtro, setFiltro] = useState<Categoria | "Todos">("Todos");
 
-  const visiveis = useMemo(
-    () => (filtro === "Todos" ? produtos : produtos.filter((p) => p.categoria === filtro)),
-    [produtos, filtro]
-  );
+  const filtrosCategoria: Record<string, number> = {
+    Todos: 0,
+    Almoços: 1,
+    Hambúrgueres: 2,
+    Bebidas: 3,
+    Outros: 4,
+  };
+
+  useEffect(() => {
+    loadCatalogo();
+  }, [filtro]);
+
+  async function loadCatalogo() {
+    try {
+      const filtroId = filtrosCategoria[filtro];
+
+      const dados = await mostrarCatalogo(filtroId);
+
+      setProdutos(dados);
+    } catch {
+      toast.error("Erro ao carregar catálogo");
+    }
+  }
 
   const itens: ItemVenda[] = useMemo(
     () =>
       Object.entries(carrinho)
         .map(([id, qtd]) => {
-          const p = produtos.find((x) => x.id === id);
+          const p = produtos.find((x) => x.id === Number(id));
+
           if (!p || qtd <= 0) return null;
-          return { produtoId: p.id, nome: p.nome, preco: p.preco, quantidade: qtd };
+
+          return {
+            produtoId: p.id,
+            produto: p.produto,
+            valorUnidade: p.preco,
+            valorCalculado: p.preco * qtd,
+            valorTotal: p.preco * qtd,
+            quantidade: qtd,
+          };
         })
         .filter(Boolean) as ItemVenda[],
     [carrinho, produtos]
   );
 
-  const total = itens.reduce((s, i) => s + i.preco * i.quantidade, 0);
+  const total = itens.reduce(
+    (s, i) => s + i.valorCalculado,
+    0
+  );
 
-  const add = (id: string) => setCarrinho((c) => ({ ...c, [id]: (c[id] ?? 0) + 1 }));
-  const sub = (id: string) =>
+  const add = (id: number) =>
+    setCarrinho((c) => ({
+      ...c,
+      [id]: (c[id] ?? 0) + 1,
+    }));
+
+  const sub = (id: number) =>
     setCarrinho((c) => {
       const n = (c[id] ?? 0) - 1;
+
       const next = { ...c };
+
       if (n <= 0) delete next[id];
       else next[id] = n;
-      return next;
-    });
-  const remove = (id: string) =>
-    setCarrinho((c) => {
-      const next = { ...c };
-      delete next[id];
+
       return next;
     });
 
-  const finalizar = () => {
+  const remove = (id: number) =>
+    setCarrinho((c) => {
+      const next = { ...c };
+
+      delete next[id];
+
+      return next;
+    });
+
+  const finalizar = async () => {
     if (itens.length === 0) return;
-    addVenda(itens);
-    setCarrinho({});
-    toast.success("Venda finalizada!", { description: `Total: ${formatBRL(total)}` });
-    setProdutos(getProdutos());
+
+    try {
+      await addVenda(itens);
+
+      setCarrinho({});
+
+      toast.success("Venda finalizada!", {
+        description: `Total: ${formatBRL(total)}`,
+      });
+
+      await loadCatalogo();
+    } catch {
+      toast.error("Erro ao finalizar venda");
+    }
   };
 
   return (
@@ -81,7 +138,10 @@ function Loja() {
       <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 lg:grid-cols-[1fr_360px]">
         <section>
           <div className="mb-6">
-            <h1 className="font-display text-4xl font-bold">Cardápio</h1>
+            <h1 className="font-display text-4xl font-bold">
+              Cardápio
+            </h1>
+
             <p className="text-muted-foreground">
               Toque em um produto para adicionar ao carrinho.
             </p>
@@ -104,8 +164,9 @@ function Loja() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {visiveis.map((p) => {
+            {produtos.map((p) => {
               const qtd = carrinho[p.id] ?? 0;
+
               return (
                 <Card
                   key={p.id}
@@ -115,34 +176,61 @@ function Loja() {
                     <div className="text-[10px] font-semibold uppercase tracking-widest text-[color:var(--gold)]">
                       {p.categoria}
                     </div>
+
                     <h3 className="mt-1 font-display text-lg font-semibold leading-snug">
-                      {p.nome}
+                      {p.produto}
                     </h3>
-                    <div className="mt-2 text-2xl font-bold">{formatBRL(p.preco)}</div>
+
+                    <div className="mt-2 text-2xl font-bold">
+                      {formatBRL(p.preco)}
+                    </div>
                   </div>
+
                   <div className="mt-4 flex items-center justify-between">
                     {qtd > 0 ? (
                       <div className="flex items-center gap-2">
-                        <Button size="icon" variant="outline" onClick={() => sub(p.id)}>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={() => sub(p.id)}
+                        >
                           <Minus className="h-4 w-4" />
                         </Button>
-                        <span className="w-6 text-center font-semibold">{qtd}</span>
-                        <Button size="icon" variant="outline" onClick={() => add(p.id)}>
+
+                        <span className="w-6 text-center font-semibold">
+                          {qtd}
+                        </span>
+
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={() => add(p.id)}
+                        >
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
                     ) : (
-                      <span className="text-xs text-muted-foreground">Disponível</span>
+                      <span className="text-xs text-muted-foreground">
+                        Disponível
+                      </span>
                     )}
-                    <Button onClick={() => add(p.id)} size="sm">
-                      <Plus className="mr-1 h-4 w-4" /> Adicionar
+
+                    <Button
+                      onClick={() => add(p.id)}
+                      size="sm"
+                    >
+                      <Plus className="mr-1 h-4 w-4" />
+                      Adicionar
                     </Button>
                   </div>
                 </Card>
               );
             })}
-            {visiveis.length === 0 && (
-              <p className="text-muted-foreground">Nenhum produto nesta categoria.</p>
+
+            {produtos.length === 0 && (
+              <p className="text-muted-foreground">
+                Nenhum produto nesta categoria.
+              </p>
             )}
           </div>
         </section>
@@ -151,9 +239,14 @@ function Loja() {
           <Card className="overflow-hidden">
             <div className="flex items-center gap-2 border-b border-border bg-foreground px-5 py-4 text-primary-foreground">
               <ShoppingBag className="h-5 w-5 text-[color:var(--gold)]" />
-              <h2 className="font-display text-xl">Carrinho</h2>
+
+              <h2 className="font-display text-xl">
+                Carrinho
+              </h2>
+
               <span className="ml-auto text-sm text-[color:var(--gold-soft)]">
-                {itens.length} {itens.length === 1 ? "item" : "itens"}
+                {itens.length}{" "}
+                {itens.length === 1 ? "item" : "itens"}
               </span>
             </div>
 
@@ -163,15 +256,26 @@ function Loja() {
                   Seu carrinho está vazio.
                 </p>
               )}
+
               {itens.map((i) => (
-                <div key={i.produtoId} className="flex items-center gap-3 px-5 py-3">
+                <div
+                  key={i.produtoId}
+                  className="flex items-center gap-3 px-5 py-3"
+                >
                   <div className="flex-1">
-                    <div className="text-sm font-medium leading-tight">{i.nome}</div>
+                    <div className="text-sm font-medium leading-tight">
+                      {i.produto}
+                    </div>
+
                     <div className="text-xs text-muted-foreground">
-                      {i.quantidade} × {formatBRL(i.preco)}
+                      {i.quantidade} × {formatBRL(i.valorUnidade)}
                     </div>
                   </div>
-                  <div className="font-semibold">{formatBRL(i.preco * i.quantidade)}</div>
+
+                  <div className="font-semibold">
+                    {formatBRL(i.valorCalculado)}
+                  </div>
+
                   <button
                     onClick={() => remove(i.produtoId)}
                     className="text-muted-foreground hover:text-destructive"
@@ -185,16 +289,23 @@ function Loja() {
 
             <div className="border-t border-border bg-card px-5 py-4">
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Total</span>
-                <span className="font-display text-2xl font-bold">{formatBRL(total)}</span>
+                <span className="text-sm text-muted-foreground">
+                  Total
+                </span>
+
+                <span className="font-display text-2xl font-bold">
+                  {formatBRL(total)}
+                </span>
               </div>
+
               <Button
                 className="w-full bg-[color:var(--gold)] text-foreground hover:bg-[color:var(--gold)]/90"
                 size="lg"
                 disabled={itens.length === 0}
                 onClick={finalizar}
               >
-                <Check className="mr-2 h-4 w-4" /> Finalizar venda
+                <Check className="mr-2 h-4 w-4" />
+                Finalizar venda
               </Button>
             </div>
           </Card>

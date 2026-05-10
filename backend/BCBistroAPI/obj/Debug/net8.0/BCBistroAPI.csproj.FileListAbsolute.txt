@@ -34,3 +34,4 @@
 /Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/Dapper.dll
 /Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/Npgsql.dll
 /Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/System.Diagnostics.DiagnosticSource.dll
+/Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/BCBistroAPI.sourcelink.json

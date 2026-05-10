@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BCBistroAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+73301cc6a63eed8acdd5e0e424dccce4f37157da")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f199256d3d4491572797b658b64993dea12b1150")]
 [assembly: System.Reflection.AssemblyProductAttribute("BCBistroAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BCBistroAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BistroHeader } from "@/components/BistroHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/select";
 import {
   addProduto,
-  deleteProduto,
   formatBRL,
   getProdutos,
   updateProduto,
@@ -31,50 +30,87 @@ export const Route = createFileRoute("/admin")({
   component: Admin,
 });
 
-const CATEGORIAS: Categoria[] = ["Almoços", "Hambúrgueres", "Bebidas", "Doces"];
+const CATEGORIAS: Categoria[] = ["Almoços", "Hambúrgueres", "Bebidas", "Outros"];
 
 function Admin() {
-  const [produtos, setProdutos] = useState<Produto[]>(() => getProdutos());
+  const [produtos, setProdutos] = useState<Produto[]>([]);
   const [nome, setNome] = useState("");
   const [preco, setPreco] = useState("");
   const [categoria, setCategoria] = useState<Categoria>("Almoços");
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [editDraft, setEditDraft] = useState<Partial<Produto>>({});
 
-  const refresh = () => setProdutos(getProdutos());
+  useEffect(() =>  { 
+    loadProdutos();
+  }, [])
 
-  const criar = (e: React.FormEvent) => {
-    e.preventDefault();
-    const p = parseFloat(preco.replace(",", "."));
-    if (!nome.trim() || !Number.isFinite(p) || p <= 0) {
-      toast.error("Preencha nome e preço válidos");
-      return;
+  const loadProdutos = async () => {
+    try { 
+      const dados = await getProdutos(); 
+      setProdutos(dados); 
+    } catch { 
+      toast.error("Erro ao carregar produtos");
     }
-    addProduto({ nome: nome.trim(), preco: p, categoria });
-    setNome("");
-    setPreco("");
-    refresh();
-    toast.success("Produto cadastrado");
-  };
+  }
+
+  const refresh = async () => {
+    const dados = await getProdutos();
+
+    setProdutos(dados);
+};
+
+  const criar = async (e:React.FormEvent) => { 
+    e.preventDefault(); 
+    const p = parseFloat(preco.replace(",",".")); 
+
+    if(!nome.trim() || !Number.isFinite(p) || p <= 0) { 
+      toast.error("preencha nome e preço válidos");
+      return; 
+    }
+    try { 
+      await addProduto({
+        produto: nome.trim(),
+        preco: p,
+        categoria,
+        idCategoria: 0
+      });
+
+        setNome(""); 
+        setPreco("");
+
+        await loadProdutos(); 
+        toast.success("Produto Cadastrado");
+    } catch { 
+      toast.error("Erro ao cadastrar produto"); 
+    }
+    
+  }
 
   const startEdit = (p: Produto) => {
     setEditingId(p.id);
-    setEditDraft({ nome: p.nome, preco: p.preco, categoria: p.categoria });
+    setEditDraft({ produto: p.produto, preco: p.preco, categoria: p.categoria });
   };
 
-  const saveEdit = (id: string) => {
-    updateProduto(id, editDraft);
-    setEditingId(null);
-    setEditDraft({});
-    refresh();
-    toast.success("Produto atualizado");
-  };
+const saveEdit = async (id: number) => {
+    try {
+        await updateProduto({
+            id,
+            produto: editDraft.produto ?? "",
+            preco: editDraft.preco ?? 0,
+            categoria: editDraft.categoria ?? "",
+            idCategoria: editDraft.idCategoria ?? 0
+        });
 
-  const remove = (id: string) => {
-    if (!confirm("Excluir este produto?")) return;
-    deleteProduto(id);
-    refresh();
-  };
+        setEditingId(null);
+        setEditDraft({});
+
+        await loadProdutos();
+
+        toast.success("Produto atualizado");
+    } catch {
+        toast.error("Erro ao atualizar produto");
+    }
+};
 
   return (
     <div className="min-h-screen bg-background">
@@ -128,9 +164,9 @@ function Admin() {
                     <tr key={p.id}>
                       <td className="px-4 py-3">
                         {editing ? (
-                          <Input value={editDraft.nome ?? ""} onChange={(e) => setEditDraft((d) => ({ ...d, nome: e.target.value }))} />
+                          <Input value={editDraft.produto ?? ""} onChange={(e) => setEditDraft((d) => ({ ...d, nome: e.target.value }))} />
                         ) : (
-                          p.nome
+                          p.produto
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -166,7 +202,7 @@ function Admin() {
                           ) : (
                             <>
                               <Button size="sm" variant="outline" onClick={() => startEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                              <Button size="sm" variant="outline" onClick={() => remove(p.id)} className="text-destructive hover:text-destructive">
+                              <Button size="sm" variant="outline" /*onClick={() => remove(p.id)}*/ className="text-destructive hover:text-destructive">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </>
