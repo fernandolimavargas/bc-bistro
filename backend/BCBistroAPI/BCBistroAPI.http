@@ -1,0 +1,6 @@
+@BCBistroAPI_HostAddress = http://localhost:5031
+
+GET {{BCBistroAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
