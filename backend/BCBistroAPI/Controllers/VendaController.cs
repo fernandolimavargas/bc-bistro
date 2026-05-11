@@ -33,9 +33,33 @@ public class VendaController : ControllerBase
     }
 
     [HttpGet("buscar_vendas")]
-    public async Task<IActionResult> BuscarVendas()
+    public async Task<IActionResult> BuscarVendas([FromQuery] DateTime dataInicial, [FromQuery] DateTime dataFinal)
     {
-        return Ok(await _vendaService.BuscarVendas()); 
+        return Ok(await _vendaService.BuscarVendas(dataInicial, dataFinal));
+    }
+
+    [HttpGet("download-excel-vendas")]
+    public async Task<IActionResult> DownloadExcelVendas([FromQuery] DateTime dataInicial, [FromQuery] DateTime dataFinal)
+    {
+        try
+        {
+            var arquivo = await _vendaService
+                .DownloadExcelVendas(dataInicial, dataFinal);
+
+            return File(
+                arquivo,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"relatorio-vendas-{dataInicial:dd-MM-yyyy} - {dataFinal:dd-MM-yyyy}.xlsx"
+            );
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new
+            {
+                sucesso = false,
+                mensagem = ex.Message
+            });
+        }
     }
     
 

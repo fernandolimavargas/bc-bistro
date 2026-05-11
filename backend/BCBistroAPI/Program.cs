@@ -1,7 +1,6 @@
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -15,23 +14,25 @@ builder.Services.AddCors(options =>
                   .AllowAnyMethod();
         });
 });
+
 builder.Services.AddControllers();
+
 builder.Services.AddScoped<ConexaoDapper>();
 
-//Controllers
+// Controllers
 builder.Services.AddScoped<VendaController>();
 builder.Services.AddScoped<ProdutoController>();
 builder.Services.AddScoped<CatalogoController>();
 
-//Services
+// Services
 builder.Services.AddScoped<VendaService>();
 builder.Services.AddScoped<ProdutoService>();
 builder.Services.AddScoped<CatalogoService>();
 
-//Repositories
+// Repositories
 builder.Services.AddScoped<VendaRepository>();
 builder.Services.AddScoped<ProdutoRepository>();
-builder.Services.AddScoped<CatalogoRepository>(); 
+builder.Services.AddScoped<CatalogoRepository>();
 
 var app = builder.Build();
 
@@ -42,7 +43,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// IMPORTANTE:
+// removido UseHttpsRedirection para evitar problemas
+// de SSL/certificado na rede local
 
 app.UseCors("AllowAll");
 

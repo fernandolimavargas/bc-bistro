@@ -40,10 +40,18 @@ export interface Catalogo {
 
 export interface VendasHistoricos {
   id: number;
-  dataVenda: string;
-  valorVendidoGeral: number;
-  valorVendidoHoje: number;
-  vendasTotaisHoje: number;
+  horaVenda: string;
+  totalVenda: number;
+  totalDoDia: number;
+  produtosVendidos: ProdutosVendidos[];
+}
+
+export interface ProdutosVendidos {
+  produto: string;
+  categoria: string;
+  valorUnidade: number;
+  quantidade: number;
+  valorCalculado: number;
 }
 
 
@@ -145,11 +153,25 @@ export async function mostrarCatalogo(filtro: number): Promise<Catalogo[]> {
   return response.data
 }
 
-export async function buscarVendas(): Promise<VendasHistoricos[]> {
-  const response = await api.get("/venda/buscar_vendas");
+export async function buscarVendas(
+  dataInicial: string,
+  dataFinal: string
+): Promise<VendasHistoricos[]> {
+
+  const response = await api.get(
+    "/venda/buscar_vendas",
+    {
+      params: {
+        dataInicial: new Date(dataInicial).toISOString(),
+        dataFinal: new Date(dataFinal).toISOString(),
+      },
+    }
+  );
 
   return response.data;
 }
+
+
 
 export const formatBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

@@ -35,6 +35,7 @@ function Loja() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [carrinho, setCarrinho] = useState<Record<number, number>>({});
   const [filtro, setFiltro] = useState<Categoria | "Todos">("Todos");
+  const [loadingVenda, setLoadingVenda] = useState(false);
 
   const filtrosCategoria: Record<string, number> = {
     Todos: 0,
@@ -114,9 +115,11 @@ function Loja() {
     });
 
   const finalizar = async () => {
-    if (itens.length === 0) return;
+    if (itens.length === 0 || loadingVenda) return;
 
     try {
+      setLoadingVenda(true);
+
       await addVenda(itens);
 
       setCarrinho({});
@@ -128,12 +131,32 @@ function Loja() {
       await loadCatalogo();
     } catch {
       toast.error("Erro ao finalizar venda");
+    } finally {
+      setLoadingVenda(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
       <BistroHeader />
+
+      {loadingVenda && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 rounded-2xl bg-card px-8 py-6 shadow-2xl">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-[color:var(--gold)] border-t-transparent" />
+
+            <div className="text-center">
+              <h2 className="font-display text-xl font-semibold">
+                Finalizando venda
+              </h2>
+
+              <p className="text-sm text-muted-foreground">
+                Aguarde alguns segundos...
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 lg:grid-cols-[1fr_360px]">
         <section>
@@ -193,6 +216,7 @@ function Loja() {
                           size="icon"
                           variant="outline"
                           onClick={() => sub(p.id)}
+                          disabled={loadingVenda}
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
@@ -205,6 +229,7 @@ function Loja() {
                           size="icon"
                           variant="outline"
                           onClick={() => add(p.id)}
+                          disabled={loadingVenda}
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
@@ -218,6 +243,7 @@ function Loja() {
                     <Button
                       onClick={() => add(p.id)}
                       size="sm"
+                      disabled={loadingVenda}
                     >
                       <Plus className="mr-1 h-4 w-4" />
                       Adicionar
@@ -280,6 +306,7 @@ function Loja() {
                     onClick={() => remove(i.produtoId)}
                     className="text-muted-foreground hover:text-destructive"
                     aria-label="Remover"
+                    disabled={loadingVenda}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -301,11 +328,11 @@ function Loja() {
               <Button
                 className="w-full bg-[color:var(--gold)] text-foreground hover:bg-[color:var(--gold)]/90"
                 size="lg"
-                disabled={itens.length === 0}
+                disabled={itens.length === 0 || loadingVenda}
                 onClick={finalizar}
               >
                 <Check className="mr-2 h-4 w-4" />
-                Finalizar venda
+                {loadingVenda ? "Finalizando..." : "Finalizar venda"}
               </Button>
             </div>
           </Card>

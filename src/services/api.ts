@@ -1,5 +1,6 @@
 import axios from "axios"; 
 
 export const api = axios.create({ 
-    baseURL: "https://localhost:7273"
+    //baseURL: "http://192.168.68.240:5031/" BRASA CHURCH
+    baseURL: "https://192.168.15.10:7273" //CASA
 })

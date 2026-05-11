@@ -5,11 +5,14 @@
 /Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/BCBistroAPI.runtimeconfig.json
 /Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/BCBistroAPI.dll
 /Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/BCBistroAPI.pdb
+/Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/Dapper.dll
 /Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/Microsoft.AspNetCore.OpenApi.dll
 /Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/Microsoft.OpenApi.dll
+/Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/Npgsql.dll
 /Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/Swashbuckle.AspNetCore.Swagger.dll
 /Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerGen.dll
 /Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerUI.dll
+/Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/System.Diagnostics.DiagnosticSource.dll
 /Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/BCBistroAPI.csproj.AssemblyReference.cache
 /Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/BCBistroAPI.GeneratedMSBuildEditorConfig.editorconfig
 /Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/BCBistroAPI.AssemblyInfoInputs.cache
@@ -17,6 +20,7 @@
 /Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/BCBistroAPI.csproj.CoreCompileInputs.cache
 /Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/BCBistroAPI.MvcApplicationPartsAssemblyInfo.cs
 /Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/BCBistroAPI.MvcApplicationPartsAssemblyInfo.cache
+/Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/BCBistroAPI.sourcelink.json
 /Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/staticwebassets.build.json
 /Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/staticwebassets.development.json
 /Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/staticwebassets/msbuild.BCBistroAPI.Microsoft.AspNetCore.StaticWebAssets.props
@@ -31,7 +35,6 @@
 /Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/BCBistroAPI.pdb
 /Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/BCBistroAPI.genruntimeconfig.cache
 /Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/ref/BCBistroAPI.dll
-/Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/Dapper.dll
-/Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/Npgsql.dll
-/Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/System.Diagnostics.DiagnosticSource.dll
-/Users/fernando/bc-bistro/backend/BCBistroAPI/obj/Debug/net8.0/BCBistroAPI.sourcelink.json
+/Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/DocumentFormat.OpenXml.dll
+/Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/DocumentFormat.OpenXml.Framework.dll
+/Users/fernando/bc-bistro/backend/BCBistroAPI/bin/Debug/net8.0/System.IO.Packaging.dll

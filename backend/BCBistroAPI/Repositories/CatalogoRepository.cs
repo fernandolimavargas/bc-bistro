@@ -28,7 +28,8 @@ public class CatalogoRepository : ConexaoDapper
                 FROM produtos p 
                 INNER JOIN inf_categorias ic
                     on ic.id = p.categoria
-                {where}";
+                {where}
+                ORDER BY p.id";
 
         var connection = CreateConnection();
         return connection.Query<Catalogo>(sqlProdutos, parameters).ToList();

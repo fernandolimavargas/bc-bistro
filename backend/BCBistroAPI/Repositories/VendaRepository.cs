@@ -50,38 +50,74 @@ public class VendaRepository : ConexaoDapper
         }
     }
     
-    public async Task<List<VendasHistoricos>> BuscarVendas()
+    public async Task<List<VendasHistoricos>> BuscarVendas(DateTime dataInicial, DateTime dataFinal)
     {
         var sql = @"
-            SELECT
-                id,
-                hora_venda AS DataVenda,
+            WITH vendas_filtradas AS (
+                SELECT *
+                FROM vendas
+                WHERE CAST(hora_venda AS DATE)
+                    BETWEEN @dataInicial AND @dataFinal
+            ),
 
-                (
-                    SELECT COALESCE(SUM(total), 0)
-                    FROM vendas
-                ) AS ValorVendidoGeral,
+            vendas_com_total AS (
+                SELECT 
+                    id,
+                    hora_venda,
+                    total,
+                    SUM(total) OVER (
+                        PARTITION BY CAST(hora_venda AS DATE)
+                    ) AS totalDoDia
+                FROM vendas_filtradas
+            )
 
-                (
-                    SELECT COALESCE(SUM(total), 0)
-                    FROM vendas
-                    WHERE DATE(hora_venda) = CURRENT_DATE
-                ) AS ValorVendidoHoje,
-
-                (
-                    SELECT COUNT(*)
-                    FROM vendas
-                    WHERE DATE(hora_venda) = CURRENT_DATE
-                ) AS VendasTotaisHoje
-
-            FROM vendas
-            ORDER BY hora_venda DESC;
-        ";
+            SELECT 
+                v.id,
+                c.produto,
+                ic.categoria,
+                c.quantidade,
+                c.valor_unidade as valorUnidade,
+                c.valor_calculado as valorCalculado,
+                v.hora_venda as horaVenda,
+                v.total as TotalVenda,
+                v.totalDoDia
+            FROM vendas_com_total v
+            INNER JOIN comandas c 
+                ON c.id_venda = v.id
+            INNER JOIN produtos p 
+                ON p.nome = c.produto
+            INNER JOIN inf_categorias ic
+                ON ic.id = p.categoria
+            ORDER BY v.hora_venda;";
 
         using var connection = CreateConnection();
 
-        var dados = await connection.QueryAsync<VendasHistoricos>(sql);
+        var dados = await connection.QueryAsync<VendasHistoricosDTO>(
+            sql,
+            new
+            {
+                dataInicial = dataInicial.Date,
+                dataFinal = dataFinal.Date
+            });
 
-        return dados.ToList();
+        return dados
+            .GroupBy(g => g.Id)
+            .Select(s => new VendasHistoricos
+            {
+                Id = s.Key,
+                HoraVenda = s.First().HoraVenda,
+                TotalVenda = s.First().TotalVenda,
+                TotalDoDia = s.First().TotalDoDia,
+
+                ProdutosVendidos = s.Select(p => new ProdutosVendidos
+                {
+                    Produto = p.Produto,
+                    Categoria = p.Categoria,
+                    ValorUnidade = p.ValorUnidade,
+                    Quantidade = p.Quantidade,
+                    ValorCalculado = p.ValorCalculado
+                }).ToList()
+            })
+            .ToList();
     }
 }
